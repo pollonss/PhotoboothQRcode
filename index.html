@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth QR</title>
+    
+    <!-- Importa Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+    <script>
+        // Configurazione Firebase (Sostituisci con i tuoi dati)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCKOKFS19g-4zDCol5LoJtVwhXrQpbnZY",
+            authDomain: "photoboothqrcode.firebaseapp.com",
+            databaseURL: "https://photoboothqrcode-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "photoboothqrcode",
+            storageBucket: "photoboothqrcode.firebasestorage.app",
+            messagingSenderId: "570922866784",
+            appId: "1:570922866784:web:0d0dc4b34177dc1cb70b05"
+        };
+
+        // Inizializza Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Funzione per generare un Device ID univoco
+        function getDeviceId() {
+            let deviceId = localStorage.getItem("device_id");
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem("device_id", deviceId);
+            }
+            return deviceId;
+        }
+
+        // Funzione per controllare se il dispositivo ha già scattato una foto
+        function checkAccess() {
+            const deviceId = getDeviceId();
+            const deviceRef = db.ref('devices/' + deviceId);
+
+            deviceRef.once("value").then(snapshot => {
+                if (snapshot.exists()) {
+                    document.getElementById("message").innerHTML = "❌ Hai già scattato una foto! Accesso negato.";
+                    document.getElementById("startButton").style.display = "none";
+                } else {
+                    document.getElementById("message").innerHTML = "✅ Benvenuto! Tocca per iniziare.";
+                    document.getElementById("startButton").style.display = "block";
+                }
+            });
+        }
+
+        // Funzione per registrare il dispositivo e consentire l'accesso a HALO
+        function confirmAccess() {
+            const deviceId = getDeviceId();
+            db.ref('devices/' + deviceId).set({
+                accessed: true,
+                timestamp: new Date().toISOString()
+            }).then(() => {
+                window.location.href = "halo://open"; // Apri HALO
+            });
+        }
+    </script>
+</head>
+<body onload="checkAccess()" style="text-align:center; font-family: Arial, sans-serif;">
+    <h2>📸 Photobooth QR</h2>
+    <p id="message">Verifica in corso...</p>
+    <button id="startButton" onclick="confirmAccess()" style="display:none; font-size:20px; padding:10px; cursor:pointer;">
+        🎉 Inizia la Foto
+    </button>
+</body>
+</html>
