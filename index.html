@@ -10,13 +10,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 
     <script>
-        // Configurazione Firebase (Sostituisci con i tuoi dati)
+        // Configurazione Firebase (Corretta per un file HTML)
         const firebaseConfig = {
             apiKey: "AIzaSyCCKOKFS19g-4zDCol5LoJtVwhXrQpbnZY",
             authDomain: "photoboothqrcode.firebaseapp.com",
             databaseURL: "https://photoboothqrcode-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "photoboothqrcode",
-            storageBucket: "photoboothqrcode.firebasestorage.app",
+            storageBucket: "photoboothqrcode.appspot.com",
             messagingSenderId: "570922866784",
             appId: "1:570922866784:web:0d0dc4b34177dc1cb70b05"
         };
@@ -25,7 +25,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Funzione per generare un Device ID univoco
+        // Genera un Device ID univoco e lo salva in localStorage
         function getDeviceId() {
             let deviceId = localStorage.getItem("device_id");
             if (!deviceId) {
@@ -35,23 +35,31 @@
             return deviceId;
         }
 
-        // Funzione per controllare se il dispositivo ha già scattato una foto
+        // Controlla se il dispositivo ha già scansionato il QR Code
         function checkAccess() {
+            console.log("📢 Verifica in corso...");
             const deviceId = getDeviceId();
+            console.log("📢 Device ID generato:", deviceId);
+
             const deviceRef = db.ref('devices/' + deviceId);
 
             deviceRef.once("value").then(snapshot => {
                 if (snapshot.exists()) {
+                    console.log("❌ Il dispositivo ha già scansionato il QR Code!");
                     document.getElementById("message").innerHTML = "❌ Hai già scattato una foto! Accesso negato.";
                     document.getElementById("startButton").style.display = "none";
                 } else {
+                    console.log("✅ Dispositivo nuovo, accesso consentito.");
                     document.getElementById("message").innerHTML = "✅ Benvenuto! Tocca per iniziare.";
                     document.getElementById("startButton").style.display = "block";
                 }
+            }).catch(error => {
+                console.error("🔥 Errore nel database:", error);
+                document.getElementById("message").innerHTML = "❌ Errore di connessione. Contatta l'assistenza.";
             });
         }
 
-        // Funzione per registrare il dispositivo e consentire l'accesso a HALO
+        // Registra il dispositivo nel database e avvia la fotocamera HALO
         function confirmAccess() {
             const deviceId = getDeviceId();
             db.ref('devices/' + deviceId).set({
@@ -71,3 +79,4 @@
     </button>
 </body>
 </html>
+
